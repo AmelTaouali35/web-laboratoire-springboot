@@ -1,8 +1,8 @@
 package com.example.Backend.projet.controller;
-
 import com.example.Backend.projet.dto.LabRequest;
 import com.example.Backend.projet.dto.LabResponse;
 import com.example.Backend.projet.dto.LaboratoireProduitDto;
+import com.example.Backend.projet.dto.SignupRequest;
 import com.example.Backend.projet.dto.UserInfoDto;
 import com.example.Backend.projet.model.Customer;
 import com.example.Backend.projet.model.ERole;
@@ -13,10 +13,12 @@ import com.example.Backend.projet.repository.LaboratoireRepository;
 import com.example.Backend.projet.repository.UserRepository;
 import com.example.Backend.projet.service.CustomerService;
 import com.example.Backend.projet.service.EmailService;
+import com.example.Backend.projet.service.LaboratoireService;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,10 +38,11 @@ import javax.validation.Valid;
 @RequestMapping("/api/v1/labs")
 @RequiredArgsConstructor
 public class LabController {
+	 @Autowired
+	    private LaboratoireService laboratoireService;
 
-  
     private final  LaboratoireRepository laboratoireRepository;
-    
+
     private final PasswordEncoder passwordEncoder ;
     @Autowired
     private EmailService emailService;
@@ -47,10 +50,14 @@ public class LabController {
     @Autowired
     private CustomerService customerService;
     @Autowired
-    
-    private CustomerRepository customerRepository;
-    
 
+    private CustomerRepository customerRepository;
+
+ 
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<User> getLaboratoireProfile(@PathVariable Long id) {
+        return laboratoireService.getLaboratoireProfile(id);
+    }
     @GetMapping("/getAllProducts/{id}")
     public ResponseEntity<List<LaboratoireProduitDto>> getProductsByLaboratoryId(@PathVariable Long id) {
         return customerService.getLaboratoireProduits(id);
@@ -79,9 +86,6 @@ public class LabController {
             newLab.setRole(ERole.ROLE_LABORATOIRE);
             laboratoireRepository.save(newLab);
 
-            // Send email to the lab
-            emailService.sendLabCreationEmail(newLab.getEmail(), labRequest.getPassword());
-
             return ResponseEntity.status(HttpStatus.CREATED).body(new LabResponse("Laboratory added successfully."));
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new LabResponse("Duplicate entry or data integrity violation: " + e.getMessage()));
@@ -89,19 +93,28 @@ public class LabController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new LabResponse("Internal server error: " + e.getMessage()));
         }
     }
-
+    @PostMapping("/send-email")
+    public ResponseEntity<String> sendEmail(@RequestBody SignupRequest signupRequest) {
+        try {
+            emailService.sendAccountCreationEmail(signupRequest.getEmail(), signupRequest.getPassword());
+            return ResponseEntity.status(HttpStatus.OK).body("Email sent successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send email: " + e.getMessage());
+        }
+    }
+    
     @GetMapping("/getAll")
     public ResponseEntity<List<Laboratoire>> getAllLaboratories() {
         List<Laboratoire> laboratories = laboratoireRepository.findAll();
         return ResponseEntity.ok(laboratories);
     }
-   
+
     @GetMapping("/getLab/{id}")
     public ResponseEntity<Laboratoire> getLaboratoire(@PathVariable Long id) {
         Laboratoire laboratoire = laboratoireRepository.findById(id).get();
         return ResponseEntity.ok(laboratoire);
     }
-    
+
     @PutMapping("/updateLab/{id}")
     public ResponseEntity<LabResponse> updateLab(@PathVariable Long id, @Valid @RequestBody LabRequest labRequest) {
         try {
@@ -114,8 +127,8 @@ public class LabController {
             // Mettre à jour les détails du laboratoire existant
             existingLab.setCode(labRequest.getCode());
             existingLab.setDesignation(labRequest.getDesignation());
-            //existingLab.setEmail(labRequest.getEmail());
-           // existingLab.setPassword(passwordEncoder.encode(labRequest.getPassword()));
+            existingLab.setEmail(labRequest.getEmail());
+            existingLab.setPassword(passwordEncoder.encode(labRequest.getPassword()));
 
             laboratoireRepository.save(existingLab);
 
@@ -131,10 +144,12 @@ public class LabController {
             if (!laboratoireRepository.existsById(id)) {
                 return ResponseEntity.notFound().build();
             }
+            // delete laboratoire produits before delete lab 
+            customerRepository.deleteAll(customerRepository.findAllBylaboratoireId(id));
 
             // Delete the lab
             laboratoireRepository.deleteById(id);
-            
+
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -146,7 +161,7 @@ public class LabController {
         List<Customer> donnees = customerRepository.findAllByLaboratoireId(laboratoireId);
         return ResponseEntity.ok(donnees);
     }
-    
-  
-    
+
+
+
 }

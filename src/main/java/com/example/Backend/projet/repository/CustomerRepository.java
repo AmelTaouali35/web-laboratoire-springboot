@@ -9,4 +9,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 	List<Customer> findAllBylaboratoireId(Long idLaboratoire);
     List<Customer> findAllByLaboratoireId(Long laboratoireId);
     
+    
 }

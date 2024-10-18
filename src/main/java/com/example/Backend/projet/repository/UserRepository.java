@@ -18,10 +18,12 @@ import com.example.Backend.projet.model.User;
 public interface UserRepository extends JpaRepository<User, Long> { 
     Optional<User> findByEmail(String email);
     
+    Optional<User>findByEmailAndRole(String email , ERole role);
+
     boolean existsByRole(ERole eRole);
     Optional<User> findById(Long id);
 
-    
+
     @Query("SELECT u FROM User u WHERE u.role = :role")
     List<User> findUsersByRole(@Param("role") ERole role);
 }

@@ -14,4 +14,7 @@ public interface LaboratoireRepository extends JpaRepository<Laboratoire, Long> 
 	 List<Laboratoire> findAll(); 
 	    Optional<Laboratoire> findByCode(String code);
 	    Optional<Laboratoire> findById(Long id);
+	    Laboratoire findByEmail(String email);
+
+
 }

@@ -23,6 +23,8 @@ import org.springframework.web.filter.CorsFilter;
 import com.example.Backend.projet.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -35,22 +37,23 @@ public class SecurityConfig {
 	@Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http ,  AuthenticationManager authenticationManager ) throws Exception {
         return  http
+        		 .cors(withDefaults())
                     .csrf(AbstractHttpConfigurer::disable)
-                    .cors(AbstractHttpConfigurer::disable)
+                 
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(
                             request -> request
-                                .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/api/v1/register").permitAll()
-
-                                .requestMatchers("/api/v1/labs/**").permitAll()
-                                .requestMatchers("/api/v1/users/**").permitAll()
-                                .requestMatchers("/api/v1/upload/**").permitAll()
-                                .requestMatchers("/api/v1/profile/**").permitAll()
-                               
+                                .requestMatchers("/api/v1/auth/**" ,
+                                	
+                                	
+                                		"/api/v1/upload/**",
+                                
+                                		"/api/logout").permitAll()
 
                                 
-                                    .anyRequest().authenticated())
+                                    .anyRequest()
+                                    .authenticated()
+                                    )
                     .authenticationManager(authenticationManager)
                     .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                     .build();

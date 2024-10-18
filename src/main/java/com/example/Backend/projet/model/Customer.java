@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "customer")
+@Table(name = "laboratoiredata")
 public class Customer {
 
     @Id
@@ -17,8 +17,6 @@ public class Customer {
     @Column(nullable = false)
     private String libelle;
 
-    @Column(nullable = false)
-    private String codelabo;
 
     @Column(nullable = false)
     private int stockresoff;
@@ -27,7 +25,7 @@ public class Customer {
     private String cm;
 
     @Column(nullable = false)
-    private String mois;
+    private int mois;
 
     @Column(nullable = false)
     private int venteresoff;
@@ -89,13 +87,7 @@ public class Customer {
 		this.libelle = libelle;
 	}
 
-	public String getCodelabo() {
-		return codelabo;
-	}
 
-	public void setCodelabo(String codelabo) {
-		this.codelabo = codelabo;
-	}
 
 	public int getStockresoff() {
 		return stockresoff;
@@ -113,11 +105,11 @@ public class Customer {
 		this.cm = cm;
 	}
 
-	public String getMois() {
+	public int getMois() {
 		return mois;
 	}
 
-	public void setMois(String mois) {
+	public void setMois(int mois) {
 		this.mois = mois;
 	}
 

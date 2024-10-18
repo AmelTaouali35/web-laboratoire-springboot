@@ -26,25 +26,31 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<AuthenticationResponse> login(AuthenticationRequest authenticationRequest) {
-        try {
+    	
+      
             // Authentification
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword()));
+        	try {
+        		 Authentication authentication = authenticationManager.authenticate(
+                         new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword()));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        	} catch (Exception e)
+        	{
+        		e.printStackTrace();
+        	}
+           
+       
 
             // Vérification de l'utilisateur
-            User user = userRepository.findByEmail(authenticationRequest.getEmail()).orElse(null);
-            if (user == null) {
-                throw new BadCredentialsException("User not found with email: " + authenticationRequest.getEmail());
-            }
+            User user = userRepository.findByEmail(authenticationRequest.getEmail()).orElseThrow(
+            		() ->  new BadCredentialsException("User not found with email: " + authenticationRequest.getEmail()));
+
+            		
+           
 
             // Génération du token
             String token = jwtService.generateToken(user);
 
             return ResponseEntity.ok(new AuthenticationResponse(token, user.getRole().name() , user.getId()));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.badRequest().body(new AuthenticationResponse(null, null , null));
-        }
+        
     }
 }

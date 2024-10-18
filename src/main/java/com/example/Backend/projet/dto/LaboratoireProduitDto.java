@@ -19,9 +19,9 @@ public class LaboratoireProduitDto {
     private String libelle;
     private int stockresoff;
     private int stockdepreg;
-    private int Ventedepreg;
+    private int ventedepreg;
     private String cm;
-    private String mois;
+    private int mois;
     private int venteresoff;
     private int entree;
     private int reception;
@@ -42,11 +42,9 @@ public class LaboratoireProduitDto {
                 .libelle(customer.getLibelle())
                 .stockresoff(customer.getStockresoff())
                 .stockdepreg(customer.getStockdepreg())
-                .Ventedepreg(customer.getVentedepreg())
-                .date(customer.getDate())
-
+                .ventedepreg(customer.getVentedepreg())  // Corrected casing here
                 .cm(customer.getCm())
-                .mois(customer.getMois())
+                .mois(customer.getMois())               // Added missing attribute mapping
                 .venteresoff(customer.getVenteresoff())
                 .entree(customer.getEntree())
                 .reception(customer.getReception())
@@ -55,6 +53,7 @@ public class LaboratoireProduitDto {
                 .soldecde(customer.getSoldecde())
                 .encours(customer.getEncours())
                 .etat(customer.getEtat())
+                .date(customer.getDate())
                 .build();
     }
 }

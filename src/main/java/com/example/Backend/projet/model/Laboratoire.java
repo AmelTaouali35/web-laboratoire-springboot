@@ -28,8 +28,8 @@ public class Laboratoire  extends User{
 
     private String code;
     private String designation;
-    
-   
+
+
     
     
     

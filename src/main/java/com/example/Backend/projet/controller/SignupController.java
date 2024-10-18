@@ -1,7 +1,10 @@
 package com.example.Backend.projet.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,7 @@ import com.example.Backend.projet.service.EmailService;
 
 import lombok.RequiredArgsConstructor;
 
+import com.example.Backend.projet.dto.EmailRequest;
 import com.example.Backend.projet.dto.LabRequest;
 import com.example.Backend.projet.dto.LabResponse;
 import com.example.Backend.projet.dto.SignupRequest;
@@ -37,30 +41,50 @@ public class SignupController {
     private EmailService emailService;
 
     @PostMapping("/register")
-    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<SignupResponse> registerUser(@Valid @RequestBody SignupRequest signupRequest) {
         try {
+           
+            System.out.println("Received signup request: " + signupRequest);
+
             // Check if the user already exists
-            User existingUser = userRepository.findByEmail(signupRequest.getEmail()).orElse(null);
-            if (existingUser != null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SignupResponse("User with this email already exists."));
+            User existingResponsabe = userRepository.findByEmailAndRole(signupRequest.getEmail(), ERole.ROLE_RESPONSABLE).orElse(null);
+            if (existingResponsabe != null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SignupResponse("Un responsable avec cet email existe déjà."));
             }
 
-            // Create a new user
-            User user = new User();
-            user.setEmail(signupRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(signupRequest.getPassword())); // Encode password
-            user.setRole(ERole.ROLE_RESPONSABLE);
+            // Create a new responsable
+            User responsable = new User();
+            responsable.setEmail(signupRequest.getEmail());
+            responsable.setPassword(passwordEncoder.encode(signupRequest.getPassword())); // Encode password
+            responsable.setRole(ERole.ROLE_RESPONSABLE);
 
-            userRepository.save(user);
+            userRepository.save(responsable);
 
-            // Send email to the user
-            emailService.sendAccountCreationEmail(signupRequest.getEmail(), signupRequest.getPassword());
+            System.out.println("Responsable registered successfully: " + responsable);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(new SignupResponse("User registered successfully."));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new SignupResponse("Responsable enregistré avec succès."));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SignupResponse("Internal server error: " + e.getMessage()));
+            e.printStackTrace(); 
+            System.err.println("Error during user registration: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new SignupResponse("Erreur interne du serveur: " + e.getMessage()));
         }
     }
+
+    @PostMapping("/send-email")
+    public ResponseEntity<Map<String, String>> sendEmail(@RequestBody SignupRequest signupRequest) {
+        try {
+            emailService.sendAccountCreationEmail(signupRequest.getEmail(), signupRequest.getPassword());
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Email sent successfully.");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Failed to send email: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+   
     @GetMapping("/getResponsibleUsers")
     public ResponseEntity<List<User>> getResponsibleUsers() {
         List<User> responsibleUsers = userRepository.findUsersByRole(ERole.ROLE_RESPONSABLE);
